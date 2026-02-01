@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BookInn – Razorpay Test</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<h2>BookInn Payment Test</h2>
+
+<div style="margin-bottom: 20px;">
+  <label>JWT Token (login first):</label><br>
+  <textarea id="token" rows="3" cols="70"
+    placeholder="eyJhbGciOiJIUzI1NiJ9..."></textarea>
+</div>
+
+<div style="margin-bottom: 20px;">
+  <label>Booking ID (PENDING):</label><br>
+  <input type="number" id="bookingId" value="2">
+</div>
+
+<button onclick="pay()">Pay Now</button>
+
+<script>
+async function pay() {
+  const token = document.getElementById("token").value.trim();
+  const bookingId = document.getElementById("bookingId").value;
+
+  if (!token) {
+    alert("Paste JWT token first");
+    return;
+  }
+
+  // 1️⃣ Initiate payment
+  const res = await fetch("http://localhost:8084/payments/initiate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ bookingId })
+  });
+
+  if (!res.ok) {
+    alert("Initiate failed: " + await res.text());
+    return;
+  }
+
+  const data = await res.json();
+
+  // 2️⃣ Razorpay Checkout
+  const options = {
+    key: data.razorpayKey,
+    currency: data.currency,
+    order_id: data.orderId,
+
+    handler: function (response) {
+      // 3️⃣ Verify payment
+      fetch("http://localhost:8084/payments/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          bookingId: bookingId,
+          razorpayOrderId: response.razorpay_order_id,
+          razorpayPaymentId: response.razorpay_payment_id,
+          razorpaySignature: response.razorpay_signature
+        })
+      }).then(async r => {
+        if (r.ok) {
+          alert("✅ Payment verified successfully!");
+        } else {
+          alert("❌ Verification failed: " + await r.text());
+        }
+      });
+    },
+
+    modal: {
+      ondismiss: function () {
+        console.log("Checkout closed");
+      }
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
+</script>
+
+</body>
+</html>

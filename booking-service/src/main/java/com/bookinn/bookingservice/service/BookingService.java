@@ -30,10 +30,12 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final HotelServiceClient hotelServiceClient; // 👈 NEW
 
-    /* =========================================================
-       CUSTOMER / ADMIN
-       CREATE BOOKING
-       ========================================================= */
+    /*
+     * =========================================================
+     * CUSTOMER / ADMIN
+     * CREATE BOOKING
+     * =========================================================
+     */
     public BookingResponseDto createBooking(CreateBookingRequestDto request, Long userId) {
 
         // ---- validation ----
@@ -43,8 +45,7 @@ public class BookingService {
 
         long nights = ChronoUnit.DAYS.between(
                 request.getCheckInDate(),
-                request.getCheckOutDate()
-        );
+                request.getCheckOutDate());
 
         if (nights < 1) {
             throw new BadRequestException("Minimum stay is 1 night");
@@ -59,11 +60,9 @@ public class BookingService {
         }
 
         // ---- REAL pricing via hotel-service (Feign) ----
-        HotelRoomPriceResponse priceResponse =
-                hotelServiceClient.getRoomPrice(
-                        request.getHotelId(),
-                        request.getRoomTypeId()
-                );
+        HotelRoomPriceResponse priceResponse = hotelServiceClient.getRoomPrice(
+                request.getHotelId(),
+                request.getRoomTypeId());
 
         BigDecimal pricePerNight = priceResponse.getPricePerNight();
 
@@ -89,7 +88,10 @@ public class BookingService {
         return mapToResponse(savedBooking);
     }
 
-    /* ======================= rest of your service UNCHANGED ======================= */
+    /*
+     * ======================= rest of your service UNCHANGED
+     * =======================
+     */
 
     @Transactional(readOnly = true)
     public BookingResponseDto getBookingById(Long bookingId, Long userId) {
@@ -155,6 +157,15 @@ public class BookingService {
         return bookings.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
+    public void markBookingPaymentSuccess(Long bookingId) {
+        Booking booking = findBookingOrThrow(bookingId);
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+            return; // idempotent
+        }
+        booking.setStatus(BookingStatus.CONFIRMED);
+        bookingRepository.save(booking);
+    }
+
     private Booking findBookingOrThrow(Long bookingId) {
         return bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
@@ -163,6 +174,7 @@ public class BookingService {
     private BookingResponseDto mapToResponse(Booking booking) {
         return BookingResponseDto.builder()
                 .bookingId(booking.getBookingId())
+                .userId(booking.getUserId())
                 .hotelId(booking.getHotelId())
                 .roomTypeId(booking.getRoomTypeId())
                 .checkInDate(booking.getCheckInDate())

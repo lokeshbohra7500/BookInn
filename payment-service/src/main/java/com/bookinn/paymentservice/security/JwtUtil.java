@@ -1,4 +1,4 @@
-package com.bookinn.bookingservice.security;
+package com.bookinn.paymentservice.security;
 
 import java.security.Key;
 import java.util.Date;
@@ -12,6 +12,7 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
+    // Must be SAME across all services
     private static final String SECRET =
             "bookinn-super-secret-key-bookinn-super-secret-key";
 
@@ -31,12 +32,10 @@ public class JwtUtil {
         return extractAllClaims(token).get("userId", Long.class);
     }
 
-    public boolean isTokenExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
-    }
-
     public boolean validateToken(String token) {
-        return !isTokenExpired(token);
+        return !extractAllClaims(token)
+                .getExpiration()
+                .before(new Date());
     }
 
     private Claims extractAllClaims(String token) {

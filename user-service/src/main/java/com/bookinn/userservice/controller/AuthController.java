@@ -33,13 +33,15 @@ public class AuthController {
         );
 
         User user = (User) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(user);
+
+        String token = jwtUtil.generateToken(user, user.getUserId());
 
         AuthResponseDto response = new AuthResponseDto();
         response.setToken(token);
-//        response.setUserId(user.getUserId());
+        response.setUserId(user.getUserId());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
+
 
         return ResponseEntity.ok(response);
     }

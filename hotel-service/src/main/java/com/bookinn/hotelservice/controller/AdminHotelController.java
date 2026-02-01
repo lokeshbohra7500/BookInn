@@ -27,7 +27,7 @@ public class AdminHotelController {
     private final RoomTypeService roomTypeService;
 
     // ➕ Add Hotel
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<Hotel> addHotel(
             @Valid @RequestBody HotelRequestDto dto) {
 
@@ -48,7 +48,7 @@ public class AdminHotelController {
     // 🚫 Disable Hotel
     @PatchMapping("/{hotelId}/disable")
     public ResponseEntity<Hotel> disableHotel(
-            @PathVariable Long hotelId) {
+            @PathVariable("hotelId") Long hotelId) {
 
         return ResponseEntity.ok(
                 hotelService.disableHotel(hotelId)

@@ -1,4 +1,4 @@
-package com.bookinn.bookingservice.security;
+package com.bookinn.paymentservice.security;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -30,46 +30,42 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
+
         return path.startsWith("/v3/api-docs")
-            || path.startsWith("/swagger-ui")
-            || path.equals("/swagger-ui.html")
-            || path.equals("/error");
+                || path.startsWith("/swagger-ui")
+                || path.equals("/swagger-ui.html")
+                || path.equals("/error")
+                || path.startsWith("/payments/webhook"); // 🔥 Razorpay webhook
     }
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-
+            FilterChain filterChain) throws ServletException, IOException {
         try {
             String authHeader = request.getHeader("Authorization");
 
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
-
                 String token = authHeader.substring(7);
 
                 String username = jwtUtil.extractUsername(token);
                 String role = jwtUtil.extractRole(token);
-                Long userId = jwtUtil.extractUserId(token);   // ✅ NEW
+                Long userId = jwtUtil.extractUserId(token);
 
                 if (username != null &&
-                    SecurityContextHolder.getContext().getAuthentication() == null &&
-                    jwtUtil.validateToken(token)) {
+                        SecurityContextHolder.getContext().getAuthentication() == null &&
+                        jwtUtil.validateToken(token)) {
 
-                    // 🔑 Attach userId to request (THIS FIXES YOUR DB ERROR)
+                    // Attach userId so services/controllers can use it
                     request.setAttribute("userId", userId);
 
-                    SimpleGrantedAuthority authority =
-                            new SimpleGrantedAuthority(role);
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    username,   // principal (email is fine)
-                                    null,
-                                    List.of(authority)
-                            );
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            username,
+                            null,
+                            List.of(authority));
 
                     SecurityContextHolder.getContext()
                             .setAuthentication(authentication);
@@ -78,27 +74,23 @@ public class JwtFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
 
-        } catch (SignatureException |
-                 MalformedJwtException |
-                 ExpiredJwtException |
-                 UnsupportedJwtException |
-                 IllegalArgumentException ex) {
+        } catch (SignatureException | MalformedJwtException | ExpiredJwtException | UnsupportedJwtException
+                | IllegalArgumentException ex) {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
 
             response.getWriter().write("""
-                {
-                  "timestamp": "%s",
-                  "status": 401,
-                  "error": "Unauthorized",
-                  "message": "Invalid or expired JWT token",
-                  "path": "%s"
-                }
-                """.formatted(
+                    {
+                      "timestamp": "%s",
+                      "status": 401,
+                      "error": "Unauthorized",
+                      "message": "Invalid or expired JWT token",
+                      "path": "%s"
+                    }
+                    """.formatted(
                     LocalDateTime.now(),
-                    request.getRequestURI()
-                ));
+                    request.getRequestURI()));
         }
     }
 }

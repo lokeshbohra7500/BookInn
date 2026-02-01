@@ -4,16 +4,19 @@ server:
 spring:
   application:
     name: payment-service
+
   datasource:
     url: jdbc:mysql://localhost:3306/DbPayment?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: root
+
   jpa:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
@@ -33,3 +36,11 @@ logging:
     org.springframework.security: DEBUG
     com.netflix.discovery: INFO
     com.netflix.eureka: INFO
+
+razorpay:
+  key:
+    id: rzp_test_SAkJ6bJSmAtnV2
+    secret: WjUe1KhNC0R86tN0V59KyKXo
+  webhook:
+    secret: bookinn_webhook_secret_2024
+

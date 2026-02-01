@@ -24,8 +24,8 @@ public class BookingController {
 
     /* ========================= CUSTOMER / ADMIN ========================= */
 
-    @PostMapping
-    @PreAuthorize("hasAnyAuthority('CUSTOMER','ADMIN')")
+    @PostMapping("/book_hotel")
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
     public ResponseEntity<BookingResponseDto> createBooking(
             @RequestBody CreateBookingRequestDto request,
             HttpServletRequest requestContext) {
@@ -37,9 +37,9 @@ public class BookingController {
     }
 
     @GetMapping("/{bookingId}")
-    @PreAuthorize("hasAnyAuthority('CUSTOMER','ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
     public ResponseEntity<BookingResponseDto> getBookingById(
-            @PathVariable Long bookingId,
+            @PathVariable("bookingId") Long bookingId,
             HttpServletRequest requestContext) {
 
         Long userId = (Long) requestContext.getAttribute("userId");
@@ -49,19 +49,18 @@ public class BookingController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAnyAuthority('CUSTOMER','ADMIN')")
-    public ResponseEntity<List<BookingResponseDto>> getMyBookings(HttpServletRequest requestContext) {
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
+    public ResponseEntity<List<BookingResponseDto>> getMyBookings(
+            HttpServletRequest requestContext) {
 
         Long userId = (Long) requestContext.getAttribute("userId");
-        List<BookingResponseDto> bookings = bookingService.getMyBookings(userId);
-
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(bookingService.getMyBookings(userId));
     }
 
     @DeleteMapping("/{bookingId}")
-    @PreAuthorize("hasAnyAuthority('CUSTOMER','ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
     public ResponseEntity<Void> cancelBooking(
-            @PathVariable Long bookingId,
+            @PathVariable("bookingId") Long bookingId,
             HttpServletRequest requestContext) {
 
         Long userId = (Long) requestContext.getAttribute("userId");
@@ -73,36 +72,47 @@ public class BookingController {
     /* ========================= MANAGER / ADMIN ========================= */
 
     @GetMapping("/manager/hotel/{hotelId}")
-    @PreAuthorize("hasAnyAuthority('MANAGER','ADMIN')")
-    public ResponseEntity<List<BookingResponseDto>> getBookingsByHotel(@PathVariable Long hotelId) {
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    public ResponseEntity<List<BookingResponseDto>> getBookingsByHotel(
+            @PathVariable("hotelId") Long hotelId) {
 
-        List<BookingResponseDto> bookings = bookingService.getBookingsByHotel(hotelId);
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(bookingService.getBookingsByHotel(hotelId));
     }
 
     @GetMapping("/manager/hotel/{hotelId}/booking/{bookingId}")
-    @PreAuthorize("hasAnyAuthority('MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     public ResponseEntity<BookingResponseDto> getBookingForHotel(
-            @PathVariable Long hotelId,
-            @PathVariable Long bookingId) {
+            @PathVariable("hotelId") Long hotelId,
+            @PathVariable("bookingId") Long bookingId) {
 
-        BookingResponseDto response = bookingService.getBookingForHotel(bookingId, hotelId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                bookingService.getBookingForHotel(bookingId, hotelId));
     }
 
     /* ========================= ADMIN ONLY ========================= */
 
     @GetMapping("/admin/all")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BookingResponseDto>> getAllBookings() {
 
         return ResponseEntity.ok(bookingService.getAllBookings());
     }
 
     @GetMapping("/admin/user/{userId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<List<BookingResponseDto>> getBookingsByUser(@PathVariable Long userId) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<BookingResponseDto>> getBookingsByUser(
+            @PathVariable("userId") Long userId) {
 
         return ResponseEntity.ok(bookingService.getBookingsByUser(userId));
+    }
+
+    /*
+     * ========================= INTERNAL / SERVICE CALLS =========================
+     */
+
+    @PutMapping("/{bookingId}/payment-success")
+    public ResponseEntity<Void> markBookingPaymentSuccess(@PathVariable("bookingId") Long bookingId) {
+        bookingService.markBookingPaymentSuccess(bookingId);
+        return ResponseEntity.ok().build();
     }
 }

@@ -13,6 +13,7 @@ import lombok.Getter;
 public class BookingResponseDto {
 
     private Long bookingId;
+    private Long userId;   
     private Long hotelId;
     private Long roomTypeId;
 
