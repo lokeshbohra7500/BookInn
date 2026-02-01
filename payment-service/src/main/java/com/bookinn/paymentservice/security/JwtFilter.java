@@ -60,7 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     // Attach userId so services/controllers can use it
                     request.setAttribute("userId", userId);
 
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             username,

@@ -6,56 +6,45 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      routes:
-        # User Service API
-        - id: user-service
-          uri: lb://USER-SERVICE
-          predicates:
-            - Path=/api/users/**,/user-service/**,/v3/api-docs/**,/swagger-ui/**
-          filters:
-            - RewritePath=/user-service/(?<segment>.*), /${segment}
-
-        # User Service Swagger
-        - id: user-service-swagger
-          uri: lb://USER-SERVICE
-          predicates:
-            - Path=/user-service/v3/api-docs, /user-service/swagger-ui/**, /user-service/swagger-ui.html
-          filters:
-            - RewritePath=/user-service/(?<path>.*), /$\{path}
-
-        # Hotel Service
-        - id: hotel-service
-          uri: lb://HOTEL-SERVICE
-          predicates:
-            - Path=/api/hotels/**
-          filters:
-            - StripPrefix=1
-
-        # Booking Service
-        - id: booking-service
-          uri: lb://BOOKING-SERVICE
-          predicates:
-            - Path=/api/bookings/**
-          filters:
-            - StripPrefix=1
-
-        # Payment Service
-        - id: payment-service
-          uri: lb://PAYMENT-SERVICE
-          predicates:
-            - Path=/api/payments/**
-          filters:
-            - StripPrefix=1
-
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "http://localhost:3000"
+            allowedOrigins: "*"
             allowedMethods: "*"
             allowedHeaders: "*"
-            allowCredentials: true
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    gateway:
+      enabled: true
+
+# Ribbon / LoadBalancer Timeouts
+# Prevents the 21s delay by failing faster if service is invisible
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000
+
+ribbon:
+  ReadTimeout: 5000
+  ConnectTimeout: 5000
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.cloud.loadbalancer: TRACE
+    org.springframework.web: DEBUG

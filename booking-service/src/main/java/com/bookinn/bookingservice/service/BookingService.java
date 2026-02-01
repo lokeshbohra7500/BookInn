@@ -39,6 +39,9 @@ public class BookingService {
     public BookingResponseDto createBooking(CreateBookingRequestDto request, Long userId) {
 
         // ---- validation ----
+        // POLICY: Standard Check-in is 11:00 AM on checkInDate.
+        // POLICY: Standard Check-out is 11:00 AM on checkOutDate.
+        // Logic: "Night N" covers the period from Day N 11:00 AM to Day N+1 11:00 AM.
         if (request.getCheckOutDate().isBefore(request.getCheckInDate())) {
             throw new BadRequestException("Check-out date must be after check-in date");
         }
@@ -63,6 +66,27 @@ public class BookingService {
         HotelRoomPriceResponse priceResponse = hotelServiceClient.getRoomPrice(
                 request.getHotelId(),
                 request.getRoomTypeId());
+
+        // ---- INVENTORY CHECK ----
+        Long bookedRooms = bookingRepository.countConflictingBookings(
+                request.getHotelId(),
+                request.getRoomTypeId(),
+                request.getCheckInDate(),
+                request.getCheckOutDate());
+
+        Integer totalRooms = priceResponse.getTotalRooms();
+        if (totalRooms == null) {
+            // Fallback if hotel service is old version? Or throw error?
+            // Ideally we should trust it. Let's assume 0 to be safe? Or skip check?
+            // User said "hotel can only have finite rooms". Assuming totalRooms MUST be
+            // present.
+            // But verified DTO has it.
+            totalRooms = 0;
+        }
+
+        if (bookedRooms + request.getNumberOfRooms() > totalRooms) {
+            throw new BadRequestException("Not enough rooms available for selected dates");
+        }
 
         BigDecimal pricePerNight = priceResponse.getPricePerNight();
 

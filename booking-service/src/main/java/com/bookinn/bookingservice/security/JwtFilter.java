@@ -31,17 +31,17 @@ public class JwtFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         return path.startsWith("/v3/api-docs")
-            || path.startsWith("/swagger-ui")
-            || path.equals("/swagger-ui.html")
-            || path.equals("/error");
+                || path.startsWith("/swagger-ui")
+                || path.equals("/swagger-ui.html")
+                || (path.startsWith("/bookings/") && path.endsWith("/payment-success"))
+                || path.equals("/error");
     }
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
 
         try {
             String authHeader = request.getHeader("Authorization");
@@ -52,24 +52,21 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 String username = jwtUtil.extractUsername(token);
                 String role = jwtUtil.extractRole(token);
-                Long userId = jwtUtil.extractUserId(token);   // ✅ NEW
+                Long userId = jwtUtil.extractUserId(token); // ✅ NEW
 
                 if (username != null &&
-                    SecurityContextHolder.getContext().getAuthentication() == null &&
-                    jwtUtil.validateToken(token)) {
+                        SecurityContextHolder.getContext().getAuthentication() == null &&
+                        jwtUtil.validateToken(token)) {
 
                     // 🔑 Attach userId to request (THIS FIXES YOUR DB ERROR)
                     request.setAttribute("userId", userId);
 
-                    SimpleGrantedAuthority authority =
-                            new SimpleGrantedAuthority(role);
+                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    username,   // principal (email is fine)
-                                    null,
-                                    List.of(authority)
-                            );
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            username, // principal (email is fine)
+                            null,
+                            List.of(authority));
 
                     SecurityContextHolder.getContext()
                             .setAuthentication(authentication);
@@ -78,27 +75,23 @@ public class JwtFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
 
-        } catch (SignatureException |
-                 MalformedJwtException |
-                 ExpiredJwtException |
-                 UnsupportedJwtException |
-                 IllegalArgumentException ex) {
+        } catch (SignatureException | MalformedJwtException | ExpiredJwtException | UnsupportedJwtException
+                | IllegalArgumentException ex) {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
 
             response.getWriter().write("""
-                {
-                  "timestamp": "%s",
-                  "status": 401,
-                  "error": "Unauthorized",
-                  "message": "Invalid or expired JWT token",
-                  "path": "%s"
-                }
-                """.formatted(
+                    {
+                      "timestamp": "%s",
+                      "status": 401,
+                      "error": "Unauthorized",
+                      "message": "Invalid or expired JWT token",
+                      "path": "%s"
+                    }
+                    """.formatted(
                     LocalDateTime.now(),
-                    request.getRequestURI()
-                ));
+                    request.getRequestURI()));
         }
     }
 }

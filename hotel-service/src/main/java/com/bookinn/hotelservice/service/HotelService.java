@@ -3,6 +3,7 @@ package com.bookinn.hotelservice.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bookinn.hotelservice.entity.Hotel;
 import com.bookinn.hotelservice.entity.HotelStatus;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class HotelService {
 
     private final HotelRepository hotelRepository;
@@ -26,8 +28,7 @@ public class HotelService {
     // ADMIN
     public Hotel disableHotel(Long hotelId) {
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() ->
-                        new HotelNotFoundException("Hotel not found with id: " + hotelId));
+                .orElseThrow(() -> new HotelNotFoundException("Hotel not found with id: " + hotelId));
 
         hotel.setStatus(HotelStatus.INACTIVE);
         return hotelRepository.save(hotel);
@@ -46,7 +47,6 @@ public class HotelService {
     // INTERNAL / BOOKING
     public Hotel getHotelById(Long hotelId) {
         return hotelRepository.findById(hotelId)
-                .orElseThrow(() ->
-                        new HotelNotFoundException("Hotel not found with id: " + hotelId));
+                .orElseThrow(() -> new HotelNotFoundException("Hotel not found with id: " + hotelId));
     }
 }

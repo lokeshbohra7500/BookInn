@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.bookinn.paymentservice.client.dto.BookingResponseDto;
 
-@FeignClient(name = "BOOKING-SERVICE")
+@FeignClient(name = "BOOKING-SERVICE", url = "http://localhost:8083")
 public interface BookingServiceClient {
 
         @GetMapping("/bookings/{bookingId}")

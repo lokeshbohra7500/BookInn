@@ -3,6 +3,7 @@ package com.bookinn.hotelservice.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bookinn.hotelservice.entity.Hotel;
 import com.bookinn.hotelservice.entity.RoomType;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class RoomTypeService {
 
     private final RoomTypeRepository roomTypeRepository;
@@ -24,8 +26,7 @@ public class RoomTypeService {
     public RoomType addRoomType(Long hotelId, RoomType roomType) {
 
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() ->
-                        new HotelNotFoundException("Hotel not found with id: " + hotelId));
+                .orElseThrow(() -> new HotelNotFoundException("Hotel not found with id: " + hotelId));
 
         roomType.setHotel(hotel);
         return roomTypeRepository.save(roomType);
@@ -39,7 +40,6 @@ public class RoomTypeService {
     // INTERNAL / BOOKING
     public RoomType getRoomTypeById(Long roomTypeId) {
         return roomTypeRepository.findById(roomTypeId)
-                .orElseThrow(() ->
-                        new RoomTypeNotFoundException("RoomType not found with id: " + roomTypeId));
+                .orElseThrow(() -> new RoomTypeNotFoundException("RoomType not found with id: " + roomTypeId));
     }
 }

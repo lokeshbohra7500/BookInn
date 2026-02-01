@@ -12,4 +12,5 @@ public class HotelRoomPriceResponse {
     private Long hotelId;
     private Long roomTypeId;
     private BigDecimal pricePerNight;
+    private Integer totalRooms;
 }

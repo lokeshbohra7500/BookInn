@@ -17,4 +17,5 @@ public class HotelRoomPriceResponse {
 
     // actual price used by booking-service
     private BigDecimal pricePerNight;
+    private Integer totalRooms;
 }

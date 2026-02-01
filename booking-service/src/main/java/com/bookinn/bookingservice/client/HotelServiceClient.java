@@ -6,12 +6,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.bookinn.bookingservice.dto.HotelRoomPriceResponse;
 
-@FeignClient(name = "HOTEL-SERVICE")
+@FeignClient(name = "HOTEL-SERVICE", url = "http://localhost:8082")
 public interface HotelServiceClient {
 
     @GetMapping("/hotels/internal/{hotelId}/room-types/{roomTypeId}/price")
     HotelRoomPriceResponse getRoomPrice(
             @PathVariable("hotelId") Long hotelId,
-            @PathVariable("roomTypeId") Long roomTypeId
-    );
+            @PathVariable("roomTypeId") Long roomTypeId);
 }

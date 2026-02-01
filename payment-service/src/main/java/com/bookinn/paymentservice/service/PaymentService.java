@@ -33,7 +33,6 @@ public class PaymentService {
     private final RazorpayService razorpayService;
     private final ObjectMapper objectMapper;
 
-
     /**
      * Step 1: Initiate payment
      */
@@ -101,8 +100,7 @@ public class PaymentService {
         boolean valid = razorpayService.verifySignature(
                 request.getRazorpayOrderId(),
                 request.getRazorpayPaymentId(),
-                request.getRazorpaySignature()
-        );
+                request.getRazorpaySignature());
 
         if (!valid) {
             payment.setStatus(PaymentStatus.FAILED);
@@ -122,10 +120,9 @@ public class PaymentService {
      */
     public void handleWebhook(String payload, String signature) {
 
-    	boolean valid = razorpayService.verifyWebhookSignature(
-    	        payload,
-    	        signature
-    	);
+        boolean valid = razorpayService.verifyWebhookSignature(
+                payload,
+                signature);
 
         if (!valid) {
             log.warn("Invalid Razorpay webhook signature");
@@ -148,24 +145,40 @@ public class PaymentService {
             String orderId = paymentEntity.path("order_id").asText();
             String paymentId = paymentEntity.path("id").asText();
 
-            Payment payment = paymentRepository
-                    .findByGatewayOrderId(orderId)
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException("Payment not found for orderId"));
-
-            if (payment.getStatus() == PaymentStatus.SUCCESS) {
-                return; // idempotent
-            }
-
-            payment.setGatewayPaymentId(paymentId);
-            payment.setStatus(PaymentStatus.SUCCESS);
-            paymentRepository.save(payment);
-
-            bookingServiceClient.markBookingPaymentSuccess(payment.getBookingId());
+            // Delegate to a separate method for processing payment success
+            processWebhookPaymentSuccess(orderId, paymentId);
 
         } catch (Exception e) {
             // Never throw from webhook – Razorpay retries automatically
             log.error("Failed to process Razorpay webhook", e);
+        }
+    }
+
+    /**
+     * Process webhook payment success (Razorpay server-to-server notification)
+     */
+    public void processWebhookPaymentSuccess(String razorpayOrderId, String razorpayPaymentId) {
+        Payment payment = paymentRepository.findByGatewayOrderId(razorpayOrderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order: " + razorpayOrderId));
+
+        // Idempotency check - don't process if already successful
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            return;
+        }
+
+        // Update payment status
+        payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setGatewayPaymentId(razorpayPaymentId);
+        paymentRepository.save(payment);
+
+        // Notify booking service
+        try {
+            bookingServiceClient.markBookingPaymentSuccess(payment.getBookingId());
+        } catch (Exception e) {
+            // Webhook already verified, so payment is valid
+            // If booking update fails, it can be retried manually
+            log.error("Failed to notify booking service for payment success (orderId: {}, paymentId: {})",
+                    razorpayOrderId, razorpayPaymentId, e);
         }
     }
 }

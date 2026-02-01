@@ -2,7 +2,6 @@ package com.bookinn.userservice.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,50 +20,52 @@ import com.bookinn.userservice.service.UserService;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
-
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
-	@Autowired
-  private UserService service;
-	@PostMapping("/Register")
-	public ResponseEntity<UserResponseDto> register(@Valid @RequestBody RegisterRequestDto user){
-		 UserResponseDto savedUser = service.register(user);
+	private final UserService service;
+
+	@PostMapping("/register")
+	public ResponseEntity<UserResponseDto> register(@Valid @RequestBody RegisterRequestDto user) {
+		UserResponseDto savedUser = service.register(user);
 		return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
 	}
-	
+
 	@PreAuthorize("hasRole('ADMIN')")
-	 @GetMapping("/all")
-	    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
-	        List<UserResponseDto> users = service.viewAll();
+	@GetMapping("/all")
+	public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+		List<UserResponseDto> users = service.viewAll();
 
-	        if (users.isEmpty()) {
-	            return ResponseEntity.noContent().build();
-	        }
+		if (users.isEmpty()) {
+			return ResponseEntity.noContent().build();
+		}
 
-	        return ResponseEntity.ok(users);
-	    }
-	 @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-	 @GetMapping("/get/{id}")
-	 public ResponseEntity<UserResponseDto> getUserById(@Parameter(description = "User ID", required = true) @PathVariable("id") Long id) {
-	     UserResponseDto user = service.getById(id);
-	     return ResponseEntity.ok(user);
-	 }
-	 
-	 @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
-	 @GetMapping("/me")
-	 public ResponseEntity<UserResponseDto> getMe() {
-	     return ResponseEntity.ok(service.getMe());
-	 }
-	 
-	 @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
-	 @PutMapping("/update")
-	 public ResponseEntity<UserResponseDto> updateMe(
-	         @Valid @RequestBody UpdateUserRequestDto dto) {
+		return ResponseEntity.ok(users);
+	}
 
-	     return ResponseEntity.ok(service.updateMe(dto));
-	 }
+	@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+	@GetMapping("/get/{id}")
+	public ResponseEntity<UserResponseDto> getUserById(
+			@Parameter(description = "User ID", required = true) @PathVariable("id") Long id) {
+		UserResponseDto user = service.getById(id);
+		return ResponseEntity.ok(user);
+	}
 
+	@PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
+	@GetMapping("/me")
+	public ResponseEntity<UserResponseDto> getMe() {
+		return ResponseEntity.ok(service.getMe());
+	}
+
+	@PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
+	@PutMapping("/update")
+	public ResponseEntity<UserResponseDto> updateMe(
+			@Valid @RequestBody UpdateUserRequestDto dto) {
+
+		return ResponseEntity.ok(service.updateMe(dto));
+	}
 
 }
