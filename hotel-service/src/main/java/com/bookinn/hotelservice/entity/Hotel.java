@@ -41,13 +41,11 @@ public class Hotel {
     @Column(nullable = false)
     private HotelStatus status;
 
-    @OneToMany(
-        mappedBy = "hotel",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<RoomType> roomTypes;
+
+    private String imageUrl;
 
     private LocalDateTime createdAt;
 
@@ -56,6 +54,7 @@ public class Hotel {
         this.createdAt = LocalDateTime.now();
         this.status = HotelStatus.ACTIVE;
     }
+
     public void addRoomType(RoomType roomType) {
         roomType.setHotel(this);
         this.roomTypes.add(roomType);

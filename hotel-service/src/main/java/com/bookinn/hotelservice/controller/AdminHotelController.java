@@ -23,54 +23,52 @@ import lombok.RequiredArgsConstructor;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminHotelController {
 
-    private final HotelService hotelService;
-    private final RoomTypeService roomTypeService;
+        private final HotelService hotelService;
+        private final RoomTypeService roomTypeService;
 
-    // ➕ Add Hotel
-    @PostMapping("/add")
-    public ResponseEntity<Hotel> addHotel(
-            @Valid @RequestBody HotelRequestDto dto) {
+        // ➕ Add Hotel
+        @PostMapping("/add")
+        public ResponseEntity<Hotel> addHotel(
+                        @Valid @RequestBody HotelRequestDto dto) {
 
-        Hotel hotel = new Hotel();
-        hotel.setName(dto.getName());
-        hotel.setCity(dto.getCity());
-        hotel.setState(dto.getState());
-        hotel.setAddress(dto.getAddress());
-        hotel.setDescription(dto.getDescription());
-        hotel.setStarRating(dto.getStarRating());
+                Hotel hotel = new Hotel();
+                hotel.setName(dto.getName());
+                hotel.setCity(dto.getCity());
+                hotel.setState(dto.getState());
+                hotel.setAddress(dto.getAddress());
+                hotel.setDescription(dto.getDescription());
+                hotel.setStarRating(dto.getStarRating());
+                hotel.setImageUrl(dto.getImageUrl());
 
-        return new ResponseEntity<>(
-                hotelService.addHotel(hotel),
-                HttpStatus.CREATED
-        );
-    }
+                return new ResponseEntity<>(
+                                hotelService.addHotel(hotel),
+                                HttpStatus.CREATED);
+        }
 
-    // 🚫 Disable Hotel
-    @PatchMapping("/{hotelId}/disable")
-    public ResponseEntity<Hotel> disableHotel(
-            @PathVariable("hotelId") Long hotelId) {
+        // 🚫 Disable Hotel
+        @PatchMapping("/{hotelId}/disable")
+        public ResponseEntity<Hotel> disableHotel(
+                        @PathVariable("hotelId") Long hotelId) {
 
-        return ResponseEntity.ok(
-                hotelService.disableHotel(hotelId)
-        );
-    }
+                return ResponseEntity.ok(
+                                hotelService.disableHotel(hotelId));
+        }
 
-    // ➕ Add RoomType to Hotel
-    @PostMapping("/{hotelId}/room-types")
-    public ResponseEntity<RoomType> addRoomType(
-            @PathVariable("hotelId") Long hotelId,
-            @Valid @RequestBody RoomTypeRequestDto dto) {
+        // ➕ Add RoomType to Hotel
+        @PostMapping("/{hotelId}/room-types")
+        public ResponseEntity<RoomType> addRoomType(
+                        @PathVariable("hotelId") Long hotelId,
+                        @Valid @RequestBody RoomTypeRequestDto dto) {
 
-        RoomType roomType = new RoomType();
-        roomType.setType(RoomCategory.valueOf(dto.getType()));
-        roomType.setPricePerNight(dto.getPricePerNight());
-        roomType.setTotalRooms(dto.getTotalRooms());
-        roomType.setCapacity(dto.getCapacity());
-        roomType.setAmenities(dto.getAmenities());
+                RoomType roomType = new RoomType();
+                roomType.setType(RoomCategory.valueOf(dto.getType()));
+                roomType.setPricePerNight(dto.getPricePerNight());
+                roomType.setTotalRooms(dto.getTotalRooms());
+                roomType.setCapacity(dto.getCapacity());
+                roomType.setAmenities(dto.getAmenities());
 
-        return new ResponseEntity<>(
-                roomTypeService.addRoomType(hotelId, roomType),
-                HttpStatus.CREATED
-        );
-    }
+                return new ResponseEntity<>(
+                                roomTypeService.addRoomType(hotelId, roomType),
+                                HttpStatus.CREATED);
+        }
 }

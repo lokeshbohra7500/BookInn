@@ -25,4 +25,6 @@ public class HotelRequestDto {
 
     @NotNull
     private Integer starRating;
+
+    private String imageUrl;
 }

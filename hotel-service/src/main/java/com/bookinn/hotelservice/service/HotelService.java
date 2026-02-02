@@ -44,6 +44,21 @@ public class HotelService {
         return hotelRepository.findByCityIgnoreCaseAndStatus(city, HotelStatus.ACTIVE);
     }
 
+    // PUBLIC
+    public List<Hotel> searchHotelsByName(String name) {
+        return hotelRepository.findByNameContainingIgnoreCaseAndStatus(name, HotelStatus.ACTIVE);
+    }
+
+    // PUBLIC
+    public List<Hotel> getHotelsByRating(Integer rating) {
+        return hotelRepository.findByStarRatingAndStatus(rating, HotelStatus.ACTIVE);
+    }
+
+    // PUBLIC
+    public List<Hotel> getHotelsSortedByRating() {
+        return hotelRepository.findAllByStatusOrderByStarRatingDesc(HotelStatus.ACTIVE);
+    }
+
     // INTERNAL / BOOKING
     public Hotel getHotelById(Long hotelId) {
         return hotelRepository.findById(hotelId)
