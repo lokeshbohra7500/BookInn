@@ -9,8 +9,12 @@ import com.bookinn.bookingservice.dto.HotelRoomPriceResponse;
 @FeignClient(name = "HOTEL-SERVICE", url = "http://localhost:8082")
 public interface HotelServiceClient {
 
-    @GetMapping("/hotels/internal/{hotelId}/room-types/{roomTypeId}/price")
-    HotelRoomPriceResponse getRoomPrice(
-            @PathVariable("hotelId") Long hotelId,
-            @PathVariable("roomTypeId") Long roomTypeId);
+        @GetMapping("/hotels/internal/{hotelId}/room-types/{roomTypeId}/price")
+        HotelRoomPriceResponse getRoomPrice(
+                        @PathVariable("hotelId") Long hotelId,
+                        @PathVariable("roomTypeId") Long roomTypeId);
+
+        @GetMapping("/hotels/internal/room-details/{roomTypeId}")
+        com.bookinn.bookingservice.dto.RoomWithHotelResponse getRoomDetails(
+                        @PathVariable("roomTypeId") Long roomTypeId);
 }

@@ -41,11 +41,16 @@ public class Hotel {
     @Column(nullable = false)
     private HotelStatus status;
 
+    private String imageUrl;
+
     @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<RoomType> roomTypes;
 
-    private String imageUrl;
+    @ElementCollection
+    @CollectionTable(name = "hotel_images", joinColumns = @JoinColumn(name = "hotel_id"))
+    @Column(name = "image_url")
+    private List<String> images;
 
     private LocalDateTime createdAt;
 

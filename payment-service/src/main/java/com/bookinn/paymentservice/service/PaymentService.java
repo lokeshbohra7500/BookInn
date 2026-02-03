@@ -181,4 +181,12 @@ public class PaymentService {
                     razorpayOrderId, razorpayPaymentId, e);
         }
     }
+
+    /**
+     * Get all payments (Admin only)
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<Payment> getAllPayments() {
+        return paymentRepository.findAll();
+    }
 }

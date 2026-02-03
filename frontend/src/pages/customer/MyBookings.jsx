@@ -6,6 +6,20 @@ const MyBookings = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const getHotelImage = (hotelId, imageUrl) => {
+        if (imageUrl && !imageUrl.includes("placeholder")) return imageUrl;
+
+        const dummyImages = [
+            "/images/luxury.png",
+            "/images/resort.png",
+            "/images/budget.png",
+            "/images/standard.png"
+        ];
+        // Use hotelId to pick a consistent dummy image
+        const index = (hotelId || 0) % dummyImages.length;
+        return dummyImages[index];
+    };
+
     useEffect(() => {
         fetchBookings();
     }, []);
@@ -35,11 +49,9 @@ const MyBookings = () => {
 
     const handlePayment = async (bookingId) => {
         try {
-            // 1. Initiate 
             const res = await initiatePayment(bookingId);
             const data = res.data;
 
-            // 2. Razorpay Options
             const options = {
                 key: data.razorpayKey,
                 amount: data.amount,
@@ -49,7 +61,6 @@ const MyBookings = () => {
                 description: `Payment for Booking #${bookingId}`,
                 handler: async function (response) {
                     try {
-                        // 3. Verify
                         await verifyPayment({
                             bookingId: bookingId,
                             razorpayOrderId: response.razorpay_order_id,
@@ -57,14 +68,9 @@ const MyBookings = () => {
                             razorpaySignature: response.razorpay_signature
                         });
                         alert("Payment successful!");
-                        fetchBookings(); // Refresh list
+                        fetchBookings();
                     } catch (error) {
                         alert("Payment verification failed!");
-                    }
-                },
-                modal: {
-                    ondismiss: function () {
-                        console.log("Payment modal closed");
                     }
                 }
             };
@@ -76,43 +82,126 @@ const MyBookings = () => {
         }
     };
 
-    if (loading) return <div>Loading your bookings...</div>;
+    if (loading) return <div style={{ textAlign: "center", padding: "5rem" }}>Loading your bookings...</div>;
+
+    const containerStyle = {
+        padding: "2rem",
+        backgroundColor: "var(--oyo-light-gray)",
+        minHeight: "calc(100vh - 80px)"
+    };
+
+    const listContainerStyle = {
+        maxWidth: "1000px",
+        margin: "0 auto"
+    };
+
+    const bookingCardStyle = {
+        display: "flex",
+        backgroundColor: "#fff",
+        borderRadius: "8px",
+        overflow: "hidden",
+        marginBottom: "1.5rem",
+        boxShadow: "var(--card-shadow)",
+        border: "1px solid var(--oyo-border)",
+        height: "240px"
+    };
+
+    const imageWrapperStyle = {
+        width: "350px",
+        minWidth: "350px",
+        backgroundColor: "#eee"
+    };
+
+    const contentStyle = {
+        padding: "1.5rem",
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between"
+    };
+
+    const statusBadgeStyle = (status) => {
+        let color = "#767676";
+        let bgColor = "#f3f5f7";
+        if (status === "CONFIRMED") { color = "white"; bgColor = "var(--oyo-green)"; }
+        if (status === "PENDING") { color = "white"; bgColor = "#ffc107"; } // Amber
+        if (status === "CANCELLED") { color = "white"; bgColor = "#f44336"; }
+
+        return {
+            padding: "4px 12px",
+            borderRadius: "4px",
+            fontSize: "0.8rem",
+            fontWeight: "700",
+            backgroundColor: bgColor,
+            color: color,
+            textTransform: "uppercase"
+        };
+    };
 
     return (
-        <div>
-            <h2>My Bookings</h2>
-            {bookings.length === 0 ? (
-                <p>No bookings found.</p>
-            ) : (
-                <div style={{ display: "grid", gap: "1rem" }}>
-                    {bookings.map((booking) => (
-                        <div key={booking.bookingId} style={{ border: "1px solid #ccc", padding: "1rem" }}>
-                            <p><strong>Booking ID:</strong> {booking.bookingId}</p>
-                            <p><strong>Hotel ID:</strong> {booking.hotelId}</p>
-                            <p><strong>Check-in:</strong> {booking.checkInDate}</p>
-                            <p><strong>Check-out:</strong> {booking.checkOutDate}</p>
-                            <p><strong>Total Amount:</strong> ₹{booking.totalAmount}</p>
-                            <p><strong>Status:</strong> {booking.status}</p>
-                            {booking.status === "PENDING" && (
-                                <div style={{ marginTop: "10px" }}>
-                                    <button
-                                        onClick={() => handlePayment(booking.bookingId)}
-                                        style={{ marginRight: "10px", padding: "5px 10px", cursor: "pointer", backgroundColor: "#4CAF50", color: "white", border: "none" }}
-                                    >
-                                        Pay Now
-                                    </button>
-                                    <button
-                                        onClick={() => handleCancel(booking.bookingId)}
-                                        style={{ padding: "5px 10px", cursor: "pointer", backgroundColor: "#f44336", color: "white", border: "none" }}
-                                    >
-                                        Cancel
-                                    </button>
+        <div style={containerStyle}>
+            <div style={listContainerStyle}>
+                <h1 style={{ marginBottom: "2rem", fontSize: "2rem" }}>My Bookings</h1>
+
+                {bookings.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "4rem", backgroundColor: "#fff", borderRadius: "8px" }}>
+                        <p style={{ fontSize: "1.2rem", color: "var(--oyo-gray)" }}>You haven't made any bookings yet.</p>
+                    </div>
+                ) : (
+                    <div>
+                        {bookings.map((booking) => (
+                            <div key={booking.bookingId} style={bookingCardStyle}>
+                                <div style={imageWrapperStyle}>
+                                    <img
+                                        src={getHotelImage(booking.hotelId, booking.hotelImage)}
+                                        alt={booking.hotelName}
+                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                    />
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
+                                <div style={contentStyle}>
+                                    <div>
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                            <h3 style={{ fontSize: "1.4rem", marginBottom: "0.4rem" }}>{booking.hotelName || `Booking #${booking.bookingId}`}</h3>
+                                            <span style={statusBadgeStyle(booking.status)}>{booking.status}</span>
+                                        </div>
+                                        <p style={{ color: "var(--oyo-gray)", fontSize: "0.9rem", marginBottom: "0.8rem" }}>
+                                            {booking.city}, {booking.state} • {booking.roomTypeName || "Standard"} Room
+                                        </p>
+                                        <div style={{ display: "flex", gap: "2rem", marginTop: "10px" }}>
+                                            <div>
+                                                <span style={{ fontSize: "0.75rem", color: "var(--oyo-gray)", display: "block" }}>CHECK-IN</span>
+                                                <span style={{ fontWeight: "700" }}>{booking.checkInDate}</span>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: "0.75rem", color: "var(--oyo-gray)", display: "block" }}>CHECK-OUT</span>
+                                                <span style={{ fontWeight: "700" }}>{booking.checkOutDate}</span>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: "0.75rem", color: "var(--oyo-gray)", display: "block" }}>QTY</span>
+                                                <span style={{ fontWeight: "700" }}>{booking.numberOfRooms} Room(s)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                                        <div>
+                                            <span style={{ color: "var(--oyo-gray)", fontSize: "0.8rem" }}>Total Amount</span>
+                                            <p style={{ fontSize: "1.5rem", fontWeight: "800", color: "#000" }}>₹{booking.totalAmount}</p>
+                                        </div>
+
+                                        {booking.status === "PENDING" && (
+                                            <div style={{ display: "flex", gap: "0.8rem" }}>
+                                                <button onClick={() => handleCancel(booking.bookingId)} className="oyo-btn-secondary" style={{ padding: "0.6rem 1.2rem" }}>Cancel</button>
+                                                <button onClick={() => handlePayment(booking.bookingId)} className="oyo-btn-primary" style={{ padding: "0.6rem 1.2rem" }}>Pay Now</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

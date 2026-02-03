@@ -14,3 +14,11 @@ export const sortRoomsPriceLowToHigh = () => api.get("/hotels/public/sort/price/
 export const sortRoomsPriceHighToLow = () => api.get("/hotels/public/sort/price/high-to-low");
 
 export const getHotelRoomTypes = (hotelId) => api.get(`/hotels/public/${hotelId}/room-types`);
+
+// Admin Endpoints
+export const addHotel = (hotelData) => api.post("/hotels/admin/add", hotelData);
+export const disableHotel = (hotelId) => api.patch(`/hotels/admin/${hotelId}/disable`);
+export const addRoomType = (hotelId, roomTypeData) => api.post(`/hotels/admin/${hotelId}/room-types`, roomTypeData);
+export const addHotelImages = (hotelId, imageUrls) => api.post(`/hotels/admin/${hotelId}/images`, imageUrls);
+export const getInactiveHotels = () => api.get("/hotels/admin/inactive");
+export const enableHotel = (hotelId) => api.patch(`/hotels/admin/${hotelId}/enable`);

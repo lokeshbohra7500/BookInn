@@ -48,4 +48,10 @@ public class HotelInternalController {
 
         return response;
     }
+
+    @GetMapping("/room-details/{roomTypeId}")
+    public com.bookinn.hotelservice.dto.RoomWithHotelResponse getRoomDetails(
+            @PathVariable("roomTypeId") Long roomTypeId) {
+        return roomTypeService.getRoomWithHotel(roomTypeId);
+    }
 }

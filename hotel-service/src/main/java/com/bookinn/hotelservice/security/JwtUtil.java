@@ -12,8 +12,7 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
-    private static final String SECRET =
-            "bookinn-super-secret-key-bookinn-super-secret-key";
+    private static final String SECRET = "bookinn-super-secret-key-bookinn-super-secret-key";
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());

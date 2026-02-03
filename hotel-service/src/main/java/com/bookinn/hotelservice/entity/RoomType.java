@@ -39,4 +39,7 @@ public class RoomType {
 
     @Column(length = 500)
     private String amenities;
+
+    @Column(length = 1000)
+    private String description;
 }

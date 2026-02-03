@@ -39,9 +39,6 @@ public class BookingService {
     public BookingResponseDto createBooking(CreateBookingRequestDto request, Long userId) {
 
         // ---- validation ----
-        // POLICY: Standard Check-in is 11:00 AM on checkInDate.
-        // POLICY: Standard Check-out is 11:00 AM on checkOutDate.
-        // Logic: "Night N" covers the period from Day N 11:00 AM to Day N+1 11:00 AM.
         if (request.getCheckOutDate().isBefore(request.getCheckInDate())) {
             throw new BadRequestException("Check-out date must be after check-in date");
         }
@@ -68,24 +65,17 @@ public class BookingService {
                 request.getRoomTypeId());
 
         // ---- INVENTORY CHECK ----
-        Long bookedRooms = bookingRepository.countConflictingBookings(
+        boolean isAvailable = isRoomAvailable(
                 request.getHotelId(),
                 request.getRoomTypeId(),
                 request.getCheckInDate(),
-                request.getCheckOutDate());
+                request.getCheckOutDate(),
+                request.getNumberOfRooms(),
+                priceResponse.getTotalRooms());
 
-        Integer totalRooms = priceResponse.getTotalRooms();
-        if (totalRooms == null) {
-            // Fallback if hotel service is old version? Or throw error?
-            // Ideally we should trust it. Let's assume 0 to be safe? Or skip check?
-            // User said "hotel can only have finite rooms". Assuming totalRooms MUST be
-            // present.
-            // But verified DTO has it.
-            totalRooms = 0;
-        }
-
-        if (bookedRooms + request.getNumberOfRooms() > totalRooms) {
-            throw new BadRequestException("Not enough rooms available for selected dates");
+        if (!isAvailable) {
+            throw new BadRequestException(
+                    "Not enough rooms available for selected dates. Some rooms might be sold out.");
         }
 
         BigDecimal pricePerNight = priceResponse.getPricePerNight();
@@ -110,6 +100,29 @@ public class BookingService {
 
         Booking savedBooking = bookingRepository.save(booking);
         return mapToResponse(savedBooking);
+    }
+
+    public HotelRoomPriceResponse getHotelRoomPrice(Long hotelId, Long roomTypeId) {
+        return hotelServiceClient.getRoomPrice(hotelId, roomTypeId);
+    }
+
+    /**
+     * Checks if a specific number of rooms are available for a given room type and
+     * date range.
+     * Logic: (Booked Rooms + Requested Rooms) <= Total Rooms
+     */
+    public boolean isRoomAvailable(Long hotelId, Long roomTypeId, java.time.LocalDate checkIn,
+            java.time.LocalDate checkOut, Integer requestedRooms, Integer totalRooms) {
+        if (totalRooms == null || totalRooms <= 0)
+            return false;
+
+        Long bookedRooms = bookingRepository.countConflictingBookings(
+                hotelId,
+                roomTypeId,
+                checkIn,
+                checkOut);
+
+        return (bookedRooms + requestedRooms) <= totalRooms;
     }
 
     /*
@@ -196,7 +209,7 @@ public class BookingService {
     }
 
     private BookingResponseDto mapToResponse(Booking booking) {
-        return BookingResponseDto.builder()
+        BookingResponseDto dto = BookingResponseDto.builder()
                 .bookingId(booking.getBookingId())
                 .userId(booking.getUserId())
                 .hotelId(booking.getHotelId())
@@ -208,5 +221,34 @@ public class BookingService {
                 .totalAmount(booking.getTotalAmount())
                 .status(booking.getStatus())
                 .build();
+
+        // Enrich with Hotel/Room Details for UI
+        try {
+            // Fetch full details including name, image, and location from hotel-service
+            com.bookinn.bookingservice.dto.RoomWithHotelResponse fullDetails = hotelServiceClient
+                    .getRoomDetails(booking.getRoomTypeId());
+            dto = BookingResponseDto.builder()
+                    .bookingId(dto.getBookingId())
+                    .userId(dto.getUserId())
+                    .hotelId(dto.getHotelId())
+                    .roomTypeId(dto.getRoomTypeId())
+                    .checkInDate(dto.getCheckInDate())
+                    .checkOutDate(dto.getCheckOutDate())
+                    .numberOfRooms(dto.getNumberOfRooms())
+                    .numberOfGuests(dto.getNumberOfGuests())
+                    .totalAmount(dto.getTotalAmount())
+                    .status(dto.getStatus())
+                    .hotelName(fullDetails.getHotelName())
+                    .hotelImage(fullDetails.getHotelImage())
+                    .city(fullDetails.getCity())
+                    .state(fullDetails.getState())
+                    .roomTypeName(fullDetails.getType())
+                    .build();
+        } catch (Exception e) {
+            // Log error and return basic DTO if service is down
+            System.err.println("Failed to fetch hotel details for booking: " + booking.getBookingId());
+        }
+
+        return dto;
     }
 }

@@ -19,12 +19,12 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/payments")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('CUSTOMER')")
 public class PaymentController {
 
     private final PaymentService paymentService;
 
     @PostMapping("/initiate")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<PaymentInitiateResponseDto> initiatePayment(
             @Valid @RequestBody PaymentInitiateRequestDto request,
             HttpServletRequest servletRequest) {
@@ -36,6 +36,7 @@ public class PaymentController {
     }
 
     @PostMapping("/verify")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Void> verifyPayment(
             @Valid @RequestBody PaymentVerifyRequestDto request,
             HttpServletRequest servletRequest) {
@@ -47,5 +48,11 @@ public class PaymentController {
 
         paymentService.verifyPayment(request, userId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<java.util.List<com.bookinn.paymentservice.entity.Payment>> getAllPayments() {
+        return ResponseEntity.ok(paymentService.getAllPayments());
     }
 }

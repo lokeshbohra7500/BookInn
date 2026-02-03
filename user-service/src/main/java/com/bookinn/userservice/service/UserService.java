@@ -23,12 +23,12 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class UserService{
-	@Autowired
+public class UserService {
+    @Autowired
     private final PasswordEncoder passwordEncoder;
     @Autowired
-	private UserRepo repo;
-    
+    private UserRepo repo;
+
     private UserResponseDto mapToDto(User user) {
         UserResponseDto res = new UserResponseDto();
         res.setUserId(user.getUserId());
@@ -41,51 +41,55 @@ public class UserService{
         res.setStatus(user.getStatus());
         return res;
     }
-    //=========
-    //register_User
-    //=========
+
+    // =========
+    // register_User
+    // =========
     public UserResponseDto register(RegisterRequestDto dto) {
-    	  if (repo.existsByEmail(dto.getEmail())) {
-              throw new DuplicateEmailException("Email already registered: " + dto.getEmail());
-          }
-		User user = new User();
-		user.setFirstName(dto.getFirstName());
-		user.setLastName(dto.getLastName());
-		user.setEmail(dto.getEmail());
-		user.setPassword(passwordEncoder.encode(dto.getPassword()));
-		user.setRole(Role.CUSTOMER);
-		user.setStatus(Status.ACTIVE);
-		user.setCity(dto.getCity());
-		user.setState(dto.getCity());
-		
-		repo.save(user);
-		
-		 return mapToDto(user);
-	}
-    //=========
-    //get all user
-    //=========
-    public List<UserResponseDto> viewAll(){
-    	List<UserResponseDto> list= new ArrayList<>();
-    	List<User> users = repo.findAll();
-    	for(User user: users) {
-    		UserResponseDto res = new UserResponseDto();
-    		res = mapToDto(user);
-    		list.add(res);
-    	}
-    	return list;
+        if (repo.existsByEmail(dto.getEmail())) {
+            throw new DuplicateEmailException("Email already registered: " + dto.getEmail());
+        }
+        User user = new User();
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRole(Role.CUSTOMER);
+        user.setStatus(Status.ACTIVE);
+        user.setCity(dto.getCity());
+        user.setState(dto.getCity());
+
+        repo.save(user);
+
+        return mapToDto(user);
     }
-    //=========
-    //get user by id
-    //=========
+
+    // =========
+    // get all user
+    // =========
+    public List<UserResponseDto> viewAll() {
+        List<UserResponseDto> list = new ArrayList<>();
+        List<User> users = repo.findAll();
+        for (User user : users) {
+            UserResponseDto res = new UserResponseDto();
+            res = mapToDto(user);
+            list.add(res);
+        }
+        return list;
+    }
+
+    // =========
+    // get user by id
+    // =========
     public UserResponseDto getById(Long id) {
         User user = repo.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
         return mapToDto(user);
     }
-    //=========
-    //current_User
-    //=========
+
+    // =========
+    // current_User
+    // =========
     public UserResponseDto getMe() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName(); // comes from JWT subject
@@ -95,9 +99,10 @@ public class UserService{
 
         return mapToDto(user);
     }
-    //=========
-    //update_User
-    //=========
+
+    // =========
+    // update_User
+    // =========
     public UserResponseDto updateMe(UpdateUserRequestDto dto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();

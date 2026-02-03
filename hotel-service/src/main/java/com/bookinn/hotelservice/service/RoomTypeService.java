@@ -95,6 +95,11 @@ public class RoomTypeService {
     }
 
     // INTERNAL / BOOKING
+    public RoomWithHotelResponse getRoomWithHotel(Long roomTypeId) {
+        RoomType roomType = getRoomTypeById(roomTypeId);
+        return mapToRoomWithHotelResponse(roomType);
+    }
+
     public RoomType getRoomTypeById(Long roomTypeId) {
         return roomTypeRepository.findById(roomTypeId)
                 .orElseThrow(() -> new RoomTypeNotFoundException("RoomType not found with id: " + roomTypeId));

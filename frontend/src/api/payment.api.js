@@ -16,3 +16,5 @@ paymentApi.interceptors.request.use((config) => {
 export const initiatePayment = (bookingId) => paymentApi.post("/payments/initiate", { bookingId });
 
 export const verifyPayment = (paymentData) => paymentApi.post("/payments/verify", paymentData);
+
+export const getAllPayments = () => paymentApi.get("/payments/admin/all");

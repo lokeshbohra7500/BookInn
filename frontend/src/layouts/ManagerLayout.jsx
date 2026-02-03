@@ -1,14 +1,15 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const ManagerLayout = () => {
     return (
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <Navbar />
-            <header style={{ padding: "1rem", background: "#fff3e0" }}>Manager Layout (Placeholder)</header>
-            <main style={{ padding: "1rem" }}>
+            <main style={{ flex: 1, padding: "1rem" }}>
                 <Outlet />
             </main>
+            <Footer />
         </div>
     );
 };

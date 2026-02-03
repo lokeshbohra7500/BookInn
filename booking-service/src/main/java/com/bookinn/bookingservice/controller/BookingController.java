@@ -36,6 +36,22 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping("/availability")
+    public ResponseEntity<Boolean> checkAvailability(
+            @RequestParam("hotelId") Long hotelId,
+            @RequestParam("roomTypeId") Long roomTypeId,
+            @RequestParam("checkIn") java.time.LocalDate checkIn,
+            @RequestParam("checkOut") java.time.LocalDate checkOut,
+            @RequestParam(value = "rooms", defaultValue = "1") Integer rooms) {
+
+        // Need total rooms from hotel service
+        com.bookinn.bookingservice.dto.HotelRoomPriceResponse priceResponse = bookingService.getHotelRoomPrice(hotelId,
+                roomTypeId);
+        boolean available = bookingService.isRoomAvailable(hotelId, roomTypeId, checkIn, checkOut, rooms,
+                priceResponse.getTotalRooms());
+        return ResponseEntity.ok(available);
+    }
+
     @GetMapping("/{bookingId}")
     @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
     public ResponseEntity<BookingResponseDto> getBookingById(

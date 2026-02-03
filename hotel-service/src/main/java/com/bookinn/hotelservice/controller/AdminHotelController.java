@@ -1,6 +1,7 @@
 package com.bookinn.hotelservice.controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +55,22 @@ public class AdminHotelController {
                                 hotelService.disableHotel(hotelId));
         }
 
+        // ✅ Enable Hotel
+        @PatchMapping("/{hotelId}/enable")
+        public ResponseEntity<Hotel> enableHotel(
+                        @PathVariable("hotelId") Long hotelId) {
+
+                return ResponseEntity.ok(
+                                hotelService.enableHotel(hotelId));
+        }
+
+        // 🏨 Get Inactive Hotels
+        @GetMapping("/inactive")
+        public ResponseEntity<List<Hotel>> getInactiveHotels() {
+                return ResponseEntity.ok(
+                                hotelService.getInactiveHotels());
+        }
+
         // ➕ Add RoomType to Hotel
         @PostMapping("/{hotelId}/room-types")
         public ResponseEntity<RoomType> addRoomType(
@@ -70,5 +87,15 @@ public class AdminHotelController {
                 return new ResponseEntity<>(
                                 roomTypeService.addRoomType(hotelId, roomType),
                                 HttpStatus.CREATED);
+        }
+
+        // 🖼️ Add Images to Hotel
+        @PostMapping("/{hotelId}/images")
+        public ResponseEntity<Hotel> addHotelImages(
+                        @PathVariable("hotelId") Long hotelId,
+                        @RequestBody List<String> imageUrls) {
+
+                return ResponseEntity.ok(
+                                hotelService.addImages(hotelId, imageUrls));
         }
 }
