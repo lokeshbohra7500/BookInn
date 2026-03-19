@@ -22,9 +22,6 @@ jobs:
         run: mvn -f user-service/pom.xml clean verify
 
       - name: Run Sonar
-        run: mvn -f user-service/pom.xml sonar:sonar \
-          -Dsonar.projectKey=lokeshbohra7500_BookInn \
-          -Dsonar.organization=lokeshbohra7500 \
-          -Dsonar.host.url=https://sonarcloud.io
+        run: mvn -f user-service/pom.xml sonar:sonar -Dsonar.projectKey=lokeshbohra7500_BookInn -Dsonar.organization=lokeshbohra7500 -Dsonar.host.url=https://sonarcloud.io
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
