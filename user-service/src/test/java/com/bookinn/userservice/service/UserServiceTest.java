@@ -3,32 +3,32 @@ package com.bookinn.userservice.service;
 import com.bookinn.userservice.entity.User;
 import com.bookinn.userservice.repository.UserRepo;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    private UserRepo repo;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @InjectMocks
-    private UserService userService;
-
     @Test
-    void testViewAll() {
-        // create dummy user
+    void testViewAll() throws Exception {
+
+        // create mocks
+        UserRepo repo = mock(UserRepo.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+
+        // create service manually
+        UserService userService = new UserService(passwordEncoder);
+
+        // 🔥 inject repo manually using reflection (fix for your issue)
+        Field repoField = UserService.class.getDeclaredField("repo");
+        repoField.setAccessible(true);
+        repoField.set(userService, repo);
+
+        // dummy user
         User user = new User();
         user.setUserId(1L);
         user.setFirstName("Lokesh");
